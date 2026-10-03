@@ -3,7 +3,11 @@ v2/rootfs-v2.tar
 v2/*.tar.xz
 v2/*.tar.gz
 v2/.deps/
+v3/rootfs-v3.tar
+v3/*.tar
+v3/.deps/
 *.log
+!v3/artifacts/*.log
 
 # 系统杂项
 Thumbs.db

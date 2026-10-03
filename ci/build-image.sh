@@ -2,7 +2,8 @@
 # GitHub Actions / 全新 Ubuntu 主机上的 dockerharmony:x86_64 全量构建
 # 链路: 基底 rootfs(v1 12MB tar, 进仓库) -> OHOS SDK -> openssl/zlib/curl
 #       -> zsh/git/ruby4.0.7 交叉编译 -> Alpine clang15 -> brew 引导 -> x86 补丁
-#       -> chroot 端到端验证 -> tar -> docker import
+#       -> V3 容器内编译工具链(ohos-clang + OHOS sysroot) -> chroot 端到端验证
+#       -> tar -> docker import
 # 用法: sudo -E bash ci/build-image.sh   (REPO_DIR 默认取脚本上两级目录)
 set -euo pipefail
 
@@ -20,11 +21,12 @@ nproc; df -h / | tail -1
 mkdir -p $WORK
 
 echo "=== [1/9] 布置脚本与资产 ==="
-rm -rf $V2 $WORK/dockerharmony-x86
+rm -rf $V2 $WORK/v3 $WORK/dockerharmony-x86
 cp -r "$REPO_DIR/v2" $V2
+cp -r "$REPO_DIR/v3" $WORK/v3
 mkdir -p $WORK/dockerharmony-x86
 cp -f "$REPO_DIR"/v1/dockerharmony-x86/*.sh $WORK/dockerharmony-x86/
-chmod +x $V2/*.sh $WORK/dockerharmony-x86/*.sh
+chmod +x $V2/*.sh $WORK/v3/*.sh $WORK/dockerharmony-x86/*.sh
 
 echo "=== [2/9] OHOS SDK(linux native)==="
 if [ ! -d $WORK/ohos-sdk/linux/native ]; then
@@ -93,6 +95,10 @@ bash $V2/install-alpine-clang.sh 2>&1 | grep -vE "^tar: Ignoring" | tail -5
 bash $V2/brew-bootstrap.sh
 bash $V2/apply-brew-patches.sh
 
+echo "=== [7.5/9] V3 容器内编译工具链(sysroot + ohos-clang + binutils + GNU tar)==="
+V1TAR="$REPO_DIR/v1/ohos-rootfs-x86_64.tar" bash $WORK/v3/stage-v3.sh 2>&1 \
+  | grep -vE "^tar: Ignoring|APK-TOOLS|^[ 0-9]+%|^$" | tail -12
+
 echo "=== [8/9] chroot 端到端验证 ==="
 mountpoint -q $ROOTFS/dev  || mount --bind /dev  $ROOTFS/dev
 mountpoint -q $ROOTFS/proc || mount --bind /proc $ROOTFS/proc
@@ -133,6 +139,10 @@ $BREW install ohos/local/hello
 $BREW list
 echo CHROOT_VERIFY_OK
 '
+echo "--- V3 容器内真实源码编译验证 ---"
+cp -f $WORK/v3/ci-verify-v3.sh $ROOTFS/root/ci-verify-v3.sh
+chmod +x $ROOTFS/root/ci-verify-v3.sh
+chroot $ROOTFS /bin/zsh /root/ci-verify-v3.sh
 umount $ROOTFS/dev $ROOTFS/proc $ROOTFS/sys 2>/dev/null || true
 
 echo "=== [9/9] 打包镜像 ==="
@@ -140,13 +150,15 @@ IMAGE_TAR=$WORK/dockerharmony-x86_64.tar
 tar -C $ROOTFS --numeric-owner -cf $IMAGE_TAR .
 ls -lh $IMAGE_TAR
 docker import --change 'CMD ["/bin/sh"]' $IMAGE_TAR dockerharmony:x86_64
-docker run --rm dockerharmony:x86_64 /bin/sh -c '/storage/Users/currentUser/.harmonybrew/bin/brew --version && /storage/Users/currentUser/.harmonybrew/opt/hello/bin/hello.sh'
+docker run --rm dockerharmony:x86_64 /bin/sh -c 'brew --version >/dev/null 2>&1; /storage/Users/currentUser/.harmonybrew/bin/brew --version && /storage/Users/currentUser/.harmonybrew/opt/hello/bin/hello.sh && printf "#include <stdio.h>\nint main(){printf(\"img-e2e ok\\n\");return 0;}\n" > /tmp/e2e.c && ohos-clang /tmp/e2e.c -o /tmp/e2e && /tmp/e2e && test -f /storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/lib/libz.so.1.3.1 && echo zlib-brewed-ok'
 
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   {
     echo "## dockerharmony:x86_64 构建成功"
     echo "- brew 7.0.6_3 + ruby 4.0.7 + zsh 5.9 + git 2.46.0 + Alpine clang 15"
     echo "- chroot 端到端验证通过(brew install 本地 tap)"
+    echo "- V3: 容器内编译工具链(ohos-clang + OHOS sysroot + binutils + make + GNU tar)"
+    echo "- V3: brew 真实源码构建 zlib 1.3.1 并链接验证通过"
   } >> "$GITHUB_STEP_SUMMARY"
 fi
 echo CI_BUILD_ALL_OK

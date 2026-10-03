@@ -1,0 +1,116 @@
+########## 1. C 冒烟 ##########
+hello from ohos x86_64 clang
+--- readelf interpreter / 依赖 ---
+      [Requesting program interpreter: /lib/ld-musl-x86_64.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
+hello from ohos x86_64 clang
+[C smoke] exit=0
+########## 2. ar/ranlib 冒烟 ##########
+add3=6
+########## 3. C++ 冒烟 ##########
+cpp-on-ohos-x86_64 size=3
+########## 4. brew install(源码 + bottle 模式)##########
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+==> Trusted formula ohos/local/zlib
+==> Fetching downloads for: zlib
+==> Would install 1 formula:
+ohos/local/zlib 1.3.1
+✔︎ Formula zlib (1.3.1)
+==> Installing zlib from ohos/local
+Warning: Sandbox unavailable: building without sandboxing!
+==> ./configure
+==> make install
+==> Not running 'post_install' as we're building a bottle
+You can run it manually using:
+  brew postinstall ohos/local/zlib
+🍺  /storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1: 13 files, 499.4KB, built in 3 seconds
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+zlib 1.3.1
+########## 5. brew test zlib ##########
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+==> Testing ohos/local/zlib
+==> ohos-clang test.c -I/storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/include -L/storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/lib -lz -o test
+==> ./test
+########## 6. 链接已安装 zlib 的真实程序 ##########
+zlib 1.3.1: [real zlib on OHOS x86_64, brewed from source] 45 -> 53 -> 45 bytes
+########## 7. brew bottle(出 x86_64_ohos bottle)##########
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+==> Determining ohos/local/zlib bottle rebuild...
+==> Bottling zlib-1.3.1.x86_64_ohos.bottle.tar.gz...
+./zlib-1.3.1.x86_64_ohos.bottle.tar.gz
+  bottle do
+    sha256 cellar: :any_skip_relocation, x86_64_ohos: "907389e7092057317226c19ff1625e67d8059727e97b7b00d32f0b518e301aab"
+  end
+-rw-r--r-- 1 root root 183436 2026-10-03 09:05 zlib-1.3.1.x86_64_ohos.bottle.tar.gz
+total 323584
+drwxr-xr-x 2 root root   4096 2026-10-03 09:05 .
+drwxr-xr-x 3 root root   4096 2026-10-03 09:05 ..
+-rw-r--r-- 1 root root     52 2026-10-03 09:04 add.c
+-rw-r--r-- 1 root root    960 2026-10-03 09:04 add.o
+-rwxr-xr-x 1 root root  18312 2026-10-03 09:04 hello
+-rw-r--r-- 1 root root     90 2026-10-03 09:04 hello.c
+-rwxr-xr-x 1 root root  37400 2026-10-03 09:04 hellocpp
+-rw-r--r-- 1 root root    200 2026-10-03 09:04 hellocpp.cpp
+-rw-r--r-- 1 root root   1102 2026-10-03 09:04 libadd.a
+-rwxr-xr-x 1 root root  18520 2026-10-03 09:05 use_zlib
+-rw-r--r-- 1 root root    527 2026-10-03 09:05 use_zlib.c
+-rwxr-xr-x 1 root root  18368 2026-10-03 09:04 useadd
+-rw-r--r-- 1 root root    115 2026-10-03 09:04 useadd.c
+-rw-r--r-- 1 root root 183436 2026-10-03 09:05 zlib-1.3.1.x86_64_ohos.bottle.tar.gz
+########## 8. pour: uninstall → install bottle → test ##########
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+Uninstalling zlib... (14 files, 505.1KB)
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+Trusted tap: ohos/local
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+==> Would install 1 formula:
+ohos/local/zlib 1.3.1
+==> Installing zlib from ohos/local
+==> Pouring zlib-1.3.1.x86_64_ohos.bottle.tar.gz
+🍺  /storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1: 14 files, 501KB
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+zlib 1.3.1
+Successfully installed bundler-4.0.20
+Parsing documentation for bundler-4.0.20
+Done installing documentation for bundler after 0 seconds
+1 gem installed
+==> Testing ohos/local/zlib
+==> ohos-clang test.c -I/storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/include -L/storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/lib -lz -o test
+==> ./test
+total 274432
+drwxr-xr-x 3 root root   4096 2026-10-03 09:04 .
+drwxr-xr-x 6 root root   4096 2026-10-03 09:05 ..
+-r--r--r-- 1 root root 137836 2026-10-03 09:04 libz.a
+lrwxrwxrwx 1 root root     13 2026-10-03 09:04 libz.so -> libz.so.1.3.1
+lrwxrwxrwx 1 root root     13 2026-10-03 09:04 libz.so.1 -> libz.so.1.3.1
+-r-xr-xr-x 1 root root 118864 2026-10-03 09:04 libz.so.1.3.1
+drwxr-xr-x 2 root root   4096 2026-10-03 09:04 pkgconfig
+VERIFY_V3_ALL_DONE
