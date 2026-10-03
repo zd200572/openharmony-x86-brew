@@ -146,11 +146,16 @@ chroot $ROOTFS /bin/zsh /root/ci-verify-v3.sh
 umount $ROOTFS/dev $ROOTFS/proc $ROOTFS/sys 2>/dev/null || true
 
 echo "=== [9/9] 打包镜像 ==="
+# e2e 源码烘进镜像(避免 docker run 内联 printf 的多层转义坑: sh 双引号会把 \\n 坍缩成真换行)
+cat > $ROOTFS/root/e2e.c <<'EOF'
+#include <stdio.h>
+int main(void) { puts("img-e2e ok"); return 0; }
+EOF
 IMAGE_TAR=$WORK/dockerharmony-x86_64.tar
 tar -C $ROOTFS --numeric-owner -cf $IMAGE_TAR .
 ls -lh $IMAGE_TAR
 docker import --change 'CMD ["/bin/sh"]' $IMAGE_TAR dockerharmony:x86_64
-docker run --rm dockerharmony:x86_64 /bin/sh -c 'brew --version >/dev/null 2>&1; /storage/Users/currentUser/.harmonybrew/bin/brew --version && /storage/Users/currentUser/.harmonybrew/opt/hello/bin/hello.sh && printf "#include <stdio.h>\nint main(){printf(\"img-e2e ok\\n\");return 0;}\n" > /tmp/e2e.c && ohos-clang /tmp/e2e.c -o /tmp/e2e && /tmp/e2e && test -f /storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/lib/libz.so.1.3.1 && echo zlib-brewed-ok'
+docker run --rm dockerharmony:x86_64 /bin/sh -c '/storage/Users/currentUser/.harmonybrew/bin/brew --version && /storage/Users/currentUser/.harmonybrew/opt/hello/bin/hello.sh && ohos-clang /root/e2e.c -o /tmp/e2e && /tmp/e2e && test -f /storage/Users/currentUser/.harmonybrew/Cellar/zlib/1.3.1/lib/libz.so.1.3.1 && echo zlib-brewed-ok'
 
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   {
