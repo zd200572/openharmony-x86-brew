@@ -49,7 +49,7 @@
 **当前断点(V3 后续,从这里继续)**:
 1. **V3 ✅(2026-10-03)**:容器即构建机——ohos-clang(Alpine clang15 + OHOS sysroot)C/C++ 编译链接全通,brew 真实源码构建 zlib 1.3.1 → bottle(x86_64_ohos)→ pour 全绿,docker e2e 全绿。详见 `docs/V3-验证报告.md`
 2. **上游回馈**(优先):原六处 x86 泛化 + V3 新增四项(Gemfile.lock 平台白名单 / GNU tar 硬依赖 / forbid_packages_from_paths 对本地 pour / bottle 文件名单横线惯例),附 V2/V3 报告提 PR;同时提 issue 确认 x86_64 路线图
-3. **CI/服务端**:harmonybrew ci 仓库加 x86_64 构建矩阵,发布 `packages.x86_64_ohos.jws.json` → 容器可去掉 NO_INSTALL_FROM_API;bottle 批量产出(Tier-1:xz/zstd/patch 等无依赖包)
+3. **CI/服务端**:harmonybrew ci 仓库加 x86_64 构建矩阵,发布 `packages.x86_64_ohos.jws.json` → 容器可去掉 NO_INSTALL_FROM_API;bottle 批量产出(Tier-1:xz/zstd/patch 等无依赖包)。**本项目 CI 已含 V3(run7 37123577719 全绿,commit 6680f2b),ghcr 镜像即 V3 版**
 4. **可选路线 A**:OHOS 用户态 + 通用 Linux 内核的 x86 发行版形态(rootfs 直接装机)
 5. **推送镜像到阿里云 ACR**:仍卡 403 账号开通(用户侧),诊断方法见记忆
 
@@ -142,3 +142,4 @@ export HOME=/root PATH=/opt/ruby40/bin:/opt/git/bin:/opt/zsh/bin:/bin:/usr/bin
 - V1 组件集:GN 138,518 targets / ninja 4,687 全绿
 - brew 目录:`/storage/Users/currentUser/.harmonybrew/Homebrew`(tag 7.0.6_3,含 harmonybrew/core tap 与 os.sh 等本地补丁)
 - **V3(2026-10-03)**:chroot 八步全绿(VERIFY_V3_ALL_DONE,日志 `v3/artifacts/v3-verify.log`);bottle `zlib-1.3.1.x86_64_ohos.bottle.tar.gz` 183KB;docker e2e `DOCKER_E2E_ALL_DONE`;镜像 id `80ec959f457d`(807MB);容器内基线:Alpine clang 15.0.7 + GNU ld 2.44 + GNU tar 1.35 + ohos-clang(wrapper /opt/ohos-clang/bin);zlib formula 在 ohos/local tap(url file:///opt/src-cache/zlib-1.3.1.tar.gz)
+- **V3 CI(run7 37123577719, commit 6680f2b)全绿**:runner 上 C/C++ 冒烟 + brew 源码构建 zlib + 链接全过,ghcr 镜像即 V3 版。排障教训:docker run 内联 printf 生成 C 会遭 sh 双引号 `\\n`→真换行的转义坍缩,e2e 源码须 heredoc 烘进镜像;CI job 日志无 token 拿不到(公开通道只有 exit code),本机 GCM 凭据 + WSLENV=GIT_TOKEN/u 传 WSL 可拉(v3/ci-diag4.sh、v3/ci-poll.sh)
