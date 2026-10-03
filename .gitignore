@@ -7,3 +7,4 @@ v2/.deps/
 
 # 系统杂项
 Thumbs.db
+ci-log*.txt
