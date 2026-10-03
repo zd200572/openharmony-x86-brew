@@ -46,6 +46,16 @@ echo "=== [3/9] 基底 rootfs(V1 产物, 12MB)==="
 rm -rf $ROOTFS
 mkdir -p $ROOTFS
 tar -C $ROOTFS -xf "$REPO_DIR/v1/ohos-rootfs-x86_64.tar"
+# 基底 tar 的 dev/ 是空目录, 而步骤 7 的 chroot(stage-brew 校验等)不带 mount,
+# git 启动需 open("/dev/null", O_RDWR) —— run2 37095610384 即死于此; 这里补齐设备节点。
+# docker 运行时会自带 /dev, 镜像内这些节点会被运行时覆盖, 无副作用。
+mkdir -p $ROOTFS/dev $ROOTFS/proc $ROOTFS/sys
+[ -e $ROOTFS/dev/null    ] || mknod -m 666 $ROOTFS/dev/null    c 1 3
+[ -e $ROOTFS/dev/zero    ] || mknod -m 666 $ROOTFS/dev/zero    c 1 5
+[ -e $ROOTFS/dev/full    ] || mknod -m 666 $ROOTFS/dev/full    c 1 7
+[ -e $ROOTFS/dev/random  ] || mknod -m 666 $ROOTFS/dev/random  c 1 8
+[ -e $ROOTFS/dev/urandom ] || mknod -m 666 $ROOTFS/dev/urandom c 1 9
+[ -e $ROOTFS/dev/tty     ] || mknod -m 600 $ROOTFS/dev/tty     c 5 0
 
 echo "=== [4/9] openssl/zlib/curl(build-curl-x86, 自包含)==="
 cd $V2
