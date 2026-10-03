@@ -1,4 +1,6 @@
-# HANDOFF-CI:GitHub Actions 构建迭代(新 agent 从这里接手)
+# HANDOFF-CI:GitHub Actions 构建迭代(已完结)
+
+> ✅ **2026-10-03 完结**:run5 `37102593171`(commit 500eeac)全绿,镜像已发布 `ghcr.io/zd200572/openharmony-x86-brew/dockerharmony:{x86_64,latest}`,digest `sha256:51dda0eff2f270b7c7eeb1c41b5c08849e0a9572077dbc35e6d27eba20ae904d`。最终修复链:e02111f(SDK 嵌套 unzip)→ c783afd(/dev 节点)→ 0206cd1(zsh/regex 静态编入 + clang 裸名链接 + 严格验证)→ 500eeac(resolv.conf)。以下为排障过程记录,归档自仓库根目录。
 
 > 2026-10-03 · 本文档自包含。项目背景看 `handoff.md`(V0-V2 全史)与 `docs/V2-验证报告.md`,本文只讲 CI 这条线。
 

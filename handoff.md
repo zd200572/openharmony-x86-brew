@@ -6,7 +6,7 @@
 
 把 [Harmonybrew](https://atomgit.com/Harmonybrew)(仅支持 arm64 的鸿蒙版 Homebrew)生态整体搬到 x86 版 OpenHarmony。验证阶梯:V0 工具链冒烟 → V1 最小 rootfs 容器 → V2 brew 引导链 → V3 bottle 生态/CI。
 
-**V0 ✅ V1 ✅ V2 ✅ 已完成(2026-10-03,brew 引导链在 x86_64 端到端全通,含 docker 镜像)。下一步 V3,见"当前断点"。**
+**V0 ✅ V1 ✅ V2 ✅ CI ✅ 已完成(2026-10-03,brew 引导链在 x86_64 端到端全通;GitHub Actions 构建全绿,镜像自动发布到 ghcr.io)。下一步 V3,见"当前断点"。**
 
 ## 二、环境清单(全部已就位,可直接用)
 
@@ -33,6 +33,11 @@
 - 容器烘焙 `/etc/homebrew/brew.env`:NO_AUTO_UPDATE + NO_INSTALL_FROM_API + OHOS_ALLOW_NO_TOOLCHAIN
 - Alpine musl clang15(15.0.7)进 rootfs(SDK clang 是 glibc 的进不来);homebrew-core tap 已克隆(4762 formulae)
 - `dockerharmony:x86_64` 镜像重建(687MB,sha 3de3b73d5212),容器内验证通过
+
+**CI 自动构建(2026-10-03 接续完成)**——排障记录见 `docs/HANDOFF-CI.md`:
+- GitHub Actions 从源码全自动构建并发布 `ghcr.io/zd200572/openharmony-x86-brew/dockerharmony:x86_64`(+latest)。run5 `37102593171`(commit 500eeac)全绿,digest `sha256:51dda0eff2f270b7c7eeb1c41b5c08849e0a9572077dbc35e6d27eba20ae904d`
+- 过程修了 4 个 runner-only 根因(本地全绿掩盖的差距):①SDK 外层 tar 是嵌套 zip,需二次 unzip;②基底 tar 无 /dev 节点,裸 chroot 下 git 启动即死(无 /dev/null),解包后 mknod 补齐;③交叉编译无法运行 regexec 探测,configure 生成的 config.modules 把 zsh/regex 判 link=no 整体跳过(brew 启动 =~ 即死),configure 后 sed 定向改 link=static(与坑#5 同源,脚本已固化);④基底 tar 无 resolv.conf,chroot 内 DNS 全挂,拷宿主机配置修复
+- 已知非致命:actions/cache 对 /root/ohos-x86/ohos-sdk 归档报 EACCES(SDK 每次重新下载,约 1 分钟,不挡构建)
 
 **关键技术事实(勿重蹈)**:
 - Harmonybrew 的 brew update 是 `git checkout --force -B stable refs/tags/7.0.6_3`——**Library/** 的任何本地修改(含 stable 上的 commit)每次 update/auto-update 都会被抹掉**。所以:补丁必须归档+幂等重放(`apply-brew-patches.sh`),容器默认禁 auto-update;brew update 后必须重跑补丁
@@ -117,6 +122,7 @@ export HOME=/root PATH=/opt/ruby40/bin:/opt/git/bin:/opt/zsh/bin:/bin:/usr/bin
 - brew:`brew --version` → `Homebrew 7.0.6_3-dirty`;`brew list` 含 hello;`brew install ohos/local/hello` 端到端绿
 - 容器内:`/storage/Users/currentUser/.harmonybrew/opt/hello/bin/hello.sh` → `Hello from Harmonybrew on x86_64 OHOS!`
 - 镜像:`dockerharmony:x86_64` 687MB(2026-10-03,sha 3de3b73d5212);rootfs tar:`v2/rootfs-v2.tar` 675MB
+- CI 产物:`ghcr.io/zd200572/openharmony-x86-brew/dockerharmony:{x86_64,latest}`(2026-10-03,digest sha256:51dda0ef…,镜像 633MB,CI 内含 docker run 自检:brew --version + hello.sh)
 - 容器内 HTTPS:`curl https://repo.huaweicloud.com/openharmony/` 应返回 7888 字节
 - V1 组件集:GN 138,518 targets / ninja 4,687 全绿
 - brew 目录:`/storage/Users/currentUser/.harmonybrew/Homebrew`(tag 7.0.6_3,含 harmonybrew/core tap 与 os.sh 等本地补丁)
