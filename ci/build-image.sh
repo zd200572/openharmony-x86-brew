@@ -32,10 +32,14 @@ if [ ! -d $WORK/ohos-sdk/linux/native ]; then
   [ -f ohos-sdk-windows_linux-public.tar.gz ] || \
     aria2c -c -s 8 -x 8 -k 1M --summary-interval=60 -o ohos-sdk-windows_linux-public.tar.gz "$SDK_PUBLIC_TARBALL" \
     || curl -fSL --retry 3 -m 3600 -o ohos-sdk-windows_linux-public.tar.gz "$SDK_PUBLIC_TARBALL"
+  # 外层 tar 解出 ohos-sdk/linux/native-*.zip(嵌套 zip, 与上游 build-curl.sh 一致), 需再 unzip 一层
   tar -xzf ohos-sdk-windows_linux-public.tar.gz -C $WORK
   rm -f ohos-sdk-windows_linux-public.tar.gz
+  (cd $WORK/ohos-sdk/linux && unzip -q native-*.zip)
+  # native 已就位, 嵌套包与 windows 侧不再需要(瘦身 actions/cache 归档)
+  rm -rf $WORK/ohos-sdk/windows $WORK/ohos-sdk/linux/native-*.zip
 fi
-[ -d $WORK/ohos-sdk/linux/native ] || { echo "SDK 就位失败"; exit 1; }
+[ -d $WORK/ohos-sdk/linux/native ] || { echo "SDK 就位失败, 实际内容:"; ls -la $WORK/ohos-sdk/ $WORK/ohos-sdk/linux/ 2>/dev/null; exit 1; }
 du -sh $WORK/ohos-sdk/linux/native
 
 echo "=== [3/9] 基底 rootfs(V1 产物, 12MB)==="
@@ -45,6 +49,10 @@ tar -C $ROOTFS -xf "$REPO_DIR/v1/ohos-rootfs-x86_64.tar"
 
 echo "=== [4/9] openssl/zlib/curl(build-curl-x86, 自包含)==="
 cd $V2
+# build-curl-x86.sh 内部以 $V2/.build/ohos-sdk/ohos-sdk/linux/native 判定 SDK 是否就位;
+# 软链到 $WORK 的 SDK, 避免 CI 里重新下载 3.1GB
+mkdir -p $V2/.build/ohos-sdk
+ln -sfn $WORK/ohos-sdk $V2/.build/ohos-sdk/ohos-sdk
 SDK_NATIVE=$WORK/ohos-sdk/linux/native bash $WORK/dockerharmony-x86/build-curl-x86.sh \
   > $V2/ci-build-curl.log 2>&1 || { echo "CURL FAILED"; tail -40 $V2/ci-build-curl.log; exit 1; }
 # stage-brew 期望 $WORK/.build/openssl-*, 软链对齐(build-curl 输出在 $V2/.build)

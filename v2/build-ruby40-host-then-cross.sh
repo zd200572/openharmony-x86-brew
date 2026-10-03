@@ -5,6 +5,11 @@ V2=/root/ohos-x86/v2
 SDK=/root/ohos-x86/ohos-sdk/linux/native
 LLVM_BIN=$SDK/llvm/bin
 
+# ruby 源码包(仓库 .gitignore 不含大文件, 现场下载; baseruby 与交叉两处都要用)
+cd $V2
+[ -f ruby-4.0.7.tar.xz ] || curl -fsSL --retry 2 -m 600 -o ruby-4.0.7.tar.xz \
+  https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.7.tar.xz
+
 # ---------- 1. host 原生 ruby(仅作 baseruby, 极简) ----------
 if [ ! -x /opt/host-ruby/bin/ruby ]; then
   cd $V2
