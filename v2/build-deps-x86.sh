@@ -48,9 +48,14 @@ cd $V2
     https://gh-proxy.com/https://github.com/zsh-users/zsh/archive/refs/tags/zsh-5.9.tar.gz \
     https://www.zsh.org/pub/zsh-5.9.tar.xz
   tar xf zsh-5.9.tar.xz && cd zsh-5.9
+  # --disable-dynamic: 交叉编译下不构建动态 .so 模块, 一律走静态链接路径
   CPPFLAGS="-I$NCURSES_PREFIX/include" LDFLAGS="-L$NCURSES_PREFIX/lib" \
   ./configure --host=x86_64-linux-musl --build=x86_64-pc-linux-gnu --prefix=/opt/zsh \
-    --enable-multibyte --without-tcsetpgrp
+    --enable-multibyte --without-tcsetpgrp --disable-dynamic
+  # configure 顶层生成的 config.modules 才是模块构建依据; 交叉编译跑不了 regexec
+  # 探测, zsh/regex 被求值为 link=no 整体跳过(run3 37097917616: brew 启动 =~ 即死),
+  # 定向改回 static 编入二进制
+  sed -i '/^name=zsh\/regex / s/link=no/link=static/' config.modules
   make -j$(nproc)
   make install DESTDIR=$V2/zsh-stage
   cd .. && touch .deps/zsh.done && echo ZSH_OK

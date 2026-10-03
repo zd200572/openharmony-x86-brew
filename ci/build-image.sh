@@ -90,7 +90,7 @@ mountpoint -q $ROOTFS/dev  || mount --bind /dev  $ROOTFS/dev
 mountpoint -q $ROOTFS/proc || mount --bind /proc $ROOTFS/proc
 mountpoint -q $ROOTFS/sys  || mount --bind /sys  $ROOTFS/sys
 
-chroot $ROOTFS /bin/zsh -c '
+chroot $ROOTFS /bin/zsh -e -c '
 export HOME=/root PATH=/opt/ruby40/bin:/opt/git/bin:/opt/zsh/bin:/bin:/usr/bin
 BREW=/storage/Users/currentUser/.harmonybrew/bin/brew
 echo "--- 四大件 ---"
@@ -98,6 +98,9 @@ ruby --version; git --version; zsh --version; curl --version | head -1
 echo "--- clang ---"; /usr/bin/clang --version | head -1
 echo "--- brew --version ---"; $BREW --version
 echo "--- 本地 tap + install 端到端 ---"
+# 全新 rootfs 无 git 身份, tap-new 的初始提交会失败(run3 教训)
+git config --global user.email brew@localhost || true
+git config --global user.name "Harmonybrew CI" || true
 mkdir -p /root/testsrc/hello-1.0
 printf "#!/bin/sh\necho \"Hello from Harmonybrew on \$(uname -m) OHOS!\"\n" > /root/testsrc/hello-1.0/hello.sh
 chmod +x /root/testsrc/hello-1.0/hello.sh

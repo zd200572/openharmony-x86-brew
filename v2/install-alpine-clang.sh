@@ -34,6 +34,10 @@ if [ -d $STAGE/x/usr/lib/llvm15 ]; then
   mkdir -p $ROOTFS/usr/lib
   cp -a $STAGE/x/usr/lib/llvm15 $ROOTFS/usr/lib/
 fi
+# alpine 包只带 clang-15/clang++-15, 无裸名链接(brew CompilerSelector 调 clang/clang++);
+# run3 37097917616 教训: 本地手工补的链接不在脚本里, CI 产物缺 /usr/bin/clang
+ln -sf clang-15   $ROOTFS/usr/bin/clang
+ln -sf clang++-15 $ROOTFS/usr/bin/clang++
 
 # 5. chroot 内检查
 echo "=== clang 版本 ==="
