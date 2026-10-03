@@ -56,6 +56,14 @@ mkdir -p $ROOTFS/dev $ROOTFS/proc $ROOTFS/sys
 [ -e $ROOTFS/dev/random  ] || mknod -m 666 $ROOTFS/dev/random  c 1 8
 [ -e $ROOTFS/dev/urandom ] || mknod -m 666 $ROOTFS/dev/urandom c 1 9
 [ -e $ROOTFS/dev/tty     ] || mknod -m 600 $ROOTFS/dev/tty     c 5 0
+# chroot 内 DNS: 基底 tar 无 /etc/resolv.conf, musl 解析器回退 127.0.0.1 导致全部
+# 解析失败(run4 37101291485: gem/rubygems 与 git/atomgit 均 getaddrinfo Try again);
+# chroot 与宿主共享网络命名空间, 直接拷宿主机配置即可
+if [ -f /etc/resolv.conf ]; then
+  cp -f /etc/resolv.conf $ROOTFS/etc/resolv.conf
+else
+  printf 'nameserver 8.8.8.8\nnameserver 1.1.1.1\n' > $ROOTFS/etc/resolv.conf
+fi
 
 echo "=== [4/9] openssl/zlib/curl(build-curl-x86, 自包含)==="
 cd $V2
