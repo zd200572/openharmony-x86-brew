@@ -1,0 +1,17 @@
+diff --git a/Library/Homebrew/utils/os.sh b/Library/Homebrew/utils/os.sh
+index d30545f75d..77633c366c 100644
+--- a/Library/Homebrew/utils/os.sh
++++ b/Library/Homebrew/utils/os.sh
+@@ -34,10 +34,10 @@ case "${OSTYPE}" in
+ esac
+ 
+ # use musl libc check ohos
+-OHOS_MUSL_LIBC="/lib/ld-musl-aarch64.so.1"
++OHOS_MUSL_LIBC="/lib/ld-musl-$(uname -m).so.1"
+ if [[ -f "${OHOS_MUSL_LIBC}" ]] && strings ${OHOS_MUSL_LIBC} 2>/dev/null | grep -q "OHOS" &>/dev/null
+ then
+-  HOMEBREW_PROCESSOR="arm64"
++  HOMEBREW_PROCESSOR="$(uname -m)"
+   HOMEBREW_SYSTEM="Linux"
+   HOMEBREW_OHOS_SYSTEM="ohos"
+   HOMEBREW_LINUX="1"

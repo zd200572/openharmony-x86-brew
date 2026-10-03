@@ -1,0 +1,7 @@
+# x86 port stub: see third_party/asmjit/BUILD.gn note.
+config("zydis_public_config") {
+  # x86 port: no real zydis headers; never compiled for container targets
+}
+source_set("libZydis") {
+  public_configs = [ ":zydis_public_config" ]
+}

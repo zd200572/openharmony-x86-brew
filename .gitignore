@@ -1,0 +1,9 @@
+# 大文件:镜像 tar 与源码包不进 git(基底 rootfs 12MB 除外)
+v2/rootfs-v2.tar
+v2/*.tar.xz
+v2/*.tar.gz
+v2/.deps/
+*.log
+
+# 系统杂项
+Thumbs.db

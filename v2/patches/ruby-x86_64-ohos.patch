@@ -1,0 +1,58 @@
+diff --git a/Library/Homebrew/extend/os/linux/development_tools.rb b/Library/Homebrew/extend/os/linux/development_tools.rb
+index 6d8d17bd55..4ead5aaf15 100644
+--- a/Library/Homebrew/extend/os/linux/development_tools.rb
++++ b/Library/Homebrew/extend/os/linux/development_tools.rb
+@@ -30,6 +30,14 @@ module OS
+         sig { returns(Symbol) }
+         def default_compiler = :clang
+ 
++        sig { returns(T::Boolean) }
++        def installed?
++          # OHOS: the container ships no source-build toolchain yet (V3 will);
++          # allow script-like source installs behind an explicit opt-in switch.
++          return true if OS.ohos? && !ENV.fetch("HOMEBREW_OHOS_ALLOW_NO_TOOLCHAIN", "").empty?
++          !!(locate("clang") || locate("gcc"))
++        end
++
+         sig { returns(String) }
+         def installation_instructions
+           <<~EOS
+diff --git a/Library/Homebrew/extend/os/linux/extend/ENV/super.rb b/Library/Homebrew/extend/os/linux/extend/ENV/super.rb
+index 7cff908b79..5f3e77461b 100644
+--- a/Library/Homebrew/extend/os/linux/extend/ENV/super.rb
++++ b/Library/Homebrew/extend/os/linux/extend/ENV/super.rb
+@@ -91,7 +91,7 @@ module OS
+ 
+       sig { returns(T.nilable(String)) }
+       def determine_dynamic_linker_path
+-        path = "/lib/ld-musl-aarch64.so.1"
++        path = "/lib/ld-musl-#{RbConfig::CONFIG["host_cpu"]}.so.1"
+         return unless File.readable? path
+ 
+         path
+diff --git a/Library/Homebrew/extend/os/linux/linkage_checker.rb b/Library/Homebrew/extend/os/linux/linkage_checker.rb
+index 5551787d77..d0051bb89b 100644
+--- a/Library/Homebrew/extend/os/linux/linkage_checker.rb
++++ b/Library/Homebrew/extend/os/linux/linkage_checker.rb
+@@ -15,6 +15,9 @@ module OS
+       SYSTEM_LIBRARY_ALLOWLIST = %W[
+         ld-linux-x86-64.so.2
+         ld-linux-aarch64.so.1
++        ld-musl-x86_64.so.1
++        ld-musl-aarch64.so.1
++        libc.so
+         libanl.so.1
+         libatomic.so.1
+         libc.so.6
+diff --git a/Library/Homebrew/os/linux/ld.rb b/Library/Homebrew/os/linux/ld.rb
+index 3832c36b72..83c1235885 100644
+--- a/Library/Homebrew/os/linux/ld.rb
++++ b/Library/Homebrew/os/linux/ld.rb
+@@ -33,6 +33,7 @@ module OS
+         ].freeze,
+         x86_64:  %w[
+           /lib64/ld-linux-x86-64.so.2
++          /lib/ld-musl-x86_64.so.1
+           /system/bin/linker64
+         ].freeze,
+       }.freeze, T::Hash[Symbol, T::Array[String]])

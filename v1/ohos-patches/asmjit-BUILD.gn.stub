@@ -1,0 +1,11 @@
+# x86 port stub: asmjit is only consumed by arkcompiler static_core code_generator,
+# which is not built for the container rootfs targets. Provides load-phase labels only.
+config("asmjit_public_config") {
+  # x86 port: no real asmjit headers; never compiled for container targets
+}
+source_set("libasmjit") {
+  public_configs = [ ":asmjit_public_config" ]
+}
+source_set("libasmjit_frontend_static") {
+  public_configs = [ ":asmjit_public_config" ]
+}
